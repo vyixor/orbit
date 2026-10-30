@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ORBIT</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- Nav -->
+  <nav id="nav">
+    <div id="nav-logo">ORBIT</div>
+    <div id="nav-tabs">
+      <button class="nav-btn active" data-tab="inbox">Inbox</button>
+      <button class="nav-btn" data-tab="chat">Chat</button>
+      <button class="nav-btn" data-tab="tasks">Tasks</button>
+      <button class="nav-btn" data-tab="history">Log</button>
+      <button class="nav-btn" data-tab="agentlog">Agent</button>
+      <button class="nav-btn" data-tab="script">Script</button>
+      <button class="nav-btn" data-tab="settings">⚙</button>
+    </div>
+    <div id="nav-right">
+      <div id="nav-status">
+        <span id="status-dot"></span>
+        <span id="status-text">Idle</span>
+
+      </div>
+      <button id="btn-float" title="Pop out floating bot" class="btn-icon">⊙</button>
+    </div>
+  </nav>
+
+  <!-- INBOX -->
+  <div id="tab-inbox" class="tab active">
+    <div class="tab-header">
+      <h2>Inbox</h2>
+      <div class="tab-actions">
+        <button id="btn-scan" class="btn-primary">Scan Reddit</button>
+        <button id="btn-clear-inbox" class="btn-ghost">Clear</button>
+      </div>
+    </div>
+    <div id="inbox-empty" class="empty-state">
+      <p>No posts yet. Hit <strong>Scan Reddit</strong> — ORBIT will open Reddit if needed.</p>
+    </div>
+    <div id="post-list"></div>
+    <div id="post-action-bar" style="display:none;">
+      <div id="selected-count">0 selected</div>
+      <div class="action-bar-btns">
+        <button id="btn-draft-selected" class="btn-primary">Draft Selected</button>
+        <button id="btn-deselect-all" class="btn-ghost">Deselect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="tab-chat" class="tab">
+    <div class="tab-header">
+      <div class="chat-header-left">
+        <h2>Chat</h2>
+        <div class="session-row">
+          <select id="session-select" class="session-select"></select>
+          <button id="btn-delete-session" class="btn-icon btn-icon-danger" title="Delete this chat">🗑</button>
+        </div>
+      </div>
+      <div class="chat-header-right">
+        <label class="toggle-label" title="Research mode — uses Tavily before answering">
+          <input type="checkbox" id="toggle-research-mode" />
+          <span class="toggle-switch"></span>
+          Research
+        </label>
+        <div class="chat-menu-wrap">
+          <button class="btn-ghost btn-sm" id="btn-chat-menu">⋯</button>
+          <div id="chat-menu" class="dropdown" style="display:none;">
+            <button id="btn-new-chat">New chat</button>
+            <button id="btn-clear-chat">Clear current</button>
+            <button id="btn-rename-chat">Rename chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input-row">
+      <textarea id="chat-input" placeholder="Ask anything…" rows="2"></textarea>
+      <div class="chat-input-btns">
+        <button id="btn-send-chat" class="btn-primary">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="tab-tasks" class="tab">
+    <div class="tab-header">
+      <h2>Tasks & Reminders</h2>
+      <button id="btn-add-task" class="btn-primary">+ New</button>
+    </div>
+    <div id="task-input-area" style="display:none;">
+      <textarea id="task-nlp-input" placeholder='e.g. "Remind me every Friday at 6 PM to check Reddit"' rows="2"></textarea>
+      <div class="task-input-btns">
+        <button id="btn-parse-task" class="btn-primary">Parse & Save</button>
+        <button id="btn-cancel-task" class="btn-ghost">Cancel</button>
+      </div>
+    </div>
+    <div id="task-list"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="tab-history" class="tab">
+    <div class="tab-header">
+      <h2>Activity Log</h2>
+      <button id="btn-clear-history" class="btn-ghost">Clear</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- AGENT LOG -->
+  <div id="tab-agentlog" class="tab">
+    <div class="tab-header">
+      <h2>Agent Log</h2>
+      <button id="btn-clear-agentlog" class="btn-ghost">Clear</button>
+    </div>
+    <div id="agentlog-list"></div>
+  </div>
+
+  <!-- SCRIPT -->
+  <div id="tab-script" class="tab">
+    <div class="tab-header script-header">
+      <div class="script-header-left">
+        <h2>OBT Script</h2>
+        <select id="script-lang-select" class="session-select" title="Language" style="display:none">
+          <option value="os" selected>OBT Script</option>
+        </select>
+      </div>
+      <div class="script-header-right">
+        <button id="btn-script-run" class="btn-primary btn-sm">▶ Run</button>
+        <button id="btn-script-stop" class="btn-ghost btn-sm" disabled>■ Stop</button>
+        <div class="script-menu-wrap">
+          <button class="btn-ghost btn-sm" id="btn-script-menu">⋯</button>
+          <div id="script-menu" class="dropdown" style="display:none;">
+            <button id="btn-script-new">New script</button>
+            <button id="btn-script-save">Save</button>
+            <button id="btn-script-rename">Rename</button>
+            <button id="btn-script-duplicate">Duplicate</button>
+            <button id="btn-script-delete" style="color:var(--red)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script library dropdown -->
+    <div class="script-library-row">
+      <select id="script-select" class="session-select script-select"></select>
+      <span id="script-lang-badge" class="script-lang-badge">OS</span>
+    </div>
+
+    <!-- Code editor -->
+    <div id="script-editor-wrap">
+      <div id="script-line-nums" class="script-line-nums"></div>
+      <textarea
+        id="script-editor"
+        class="script-editor"
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+        placeholder='# OBT Script&#10;say "Hello world";&#10;navigate "example.com";'
+      ></textarea>
+    </div>
+
+    <!-- Run status bar -->
+    <div id="script-status-bar" class="script-status-bar" style="display:none;">
+      <span id="script-status-text">Running…</span>
+      <span id="script-status-dur"></span>
+    </div>
+
+    <!-- Console output -->
+    <div class="script-console-header">
+      <span>Console</span>
+      <button id="btn-script-copy-output" class="btn-ghost btn-sm">Copy</button>
+      <button id="btn-script-clear-console" class="btn-ghost btn-sm">Clear</button>
+    </div>
+    <div id="script-console" class="script-console"></div>
+
+    <!-- AI assist -->
+    <div class="script-ai-row">
+      <input id="script-ai-input" class="script-ai-input" placeholder='Describe what you want the script to do…' />
+      <button id="btn-script-ai-gen" class="btn-primary btn-sm">AI</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" class="tab">
+    <div class="tab-header"><h2>Settings</h2></div>
+    <div id="settings-form"></div>
+    <div class="settings-footer">
+      <button id="btn-save-settings" class="btn-primary">Save Settings</button>
+      <button id="btn-reset-settings" class="btn-ghost">Reset Defaults</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Script dialog overlay (alert / prompt commands) ────────────────────── -->
+<div id="script-dialog-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;">
+  <div id="script-dialog-box" style="background:#0e0e14;border:1.5px solid rgba(91,143,255,0.5);border-radius:14px;padding:22px 20px 18px;width:88%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:system-ui,sans-serif;">
+    <div id="script-dialog-msg" style="font-size:13.5px;color:#dde8ff;line-height:1.55;margin-bottom:16px;white-space:pre-wrap;word-break:break-word;"></div>
+    <input id="script-dialog-input" type="text" placeholder="Type your answer…"
+      style="display:none;width:100%;box-sizing:border-box;background:#1a1a28;border:1px solid rgba(91,143,255,0.4);border-radius:8px;color:#eef2ff;font-size:13px;padding:9px 12px;margin-bottom:14px;outline:none;" />
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="script-dialog-cancel" style="display:none;padding:7px 18px;border-radius:8px;border:1px solid rgba(91,143,255,0.35);background:transparent;color:#8899cc;font-size:12.5px;cursor:pointer;">Cancel</button>
+      <button id="script-dialog-ok" style="padding:7px 20px;border-radius:8px;border:none;background:#5b8fff;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">OK</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!-- Run this once in a browser to generate ORBIT icons. Save canvas as each size. -->
+<html><body>
+<canvas id="c"></canvas>
+<script>
+const sizes = [16, 48, 128];
+for (const size of sizes) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  // Background
+  ctx.fillStyle = '#0e0e10';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, size * 0.2);
+  ctx.fill();
+  // Ring
+  ctx.strokeStyle = '#5b8fff';
+  ctx.lineWidth = size * 0.08;
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size * 0.35, 0, Math.PI * 2);
+  ctx.stroke();
+  // Center dot
+  ctx.fillStyle = '#5b8fff';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Download
+  const a = document.createElement('a');
+  a.download = `icon${size}.png`;
+  a.href = c.toDataURL();
+  a.click();
+}
+</script>
+</body></html>

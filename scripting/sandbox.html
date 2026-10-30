@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!-- ORBIT Script Sandbox
+     Declared in manifest "sandbox.pages" — Chrome gives sandboxed extension
+     pages a relaxed CSP that permits eval(). This is the ONLY sanctioned
+     way to eval arbitrary user JS in MV3 without unsafe-eval in the manifest.
+
+     Communication: window.postMessage (sandboxed pages cannot use chrome.runtime).
+     The parent (sidepanel) embeds this in a hidden <iframe>, sends
+     { type:'ORBIT_EVAL', reqId, code, isExpr } and receives back
+     { type:'ORBIT_EVAL_LOG',    reqId, level, text }  — streamed while running
+     { type:'ORBIT_EVAL_RESULT', reqId, result|error } — when done
+-->
+<html><head><meta charset="utf-8"></head>
+<body>
+<script>
+'use strict';
+
+window.addEventListener('message', async function handleEval(e) {
+  if (!e.data || e.data.type !== 'ORBIT_EVAL') return;
+  const { reqId, code, isExpr, args } = e.data;
+  const src = e.source;
+
+  // Patch console so we can stream logs to the parent
+  const origLog   = console.log.bind(console);
+  const origWarn  = console.warn.bind(console);
+  const origError = console.error.bind(console);
+
+  const fmt = (args) => args.map(a => {
+    try { return (typeof a === 'object' && a !== null) ? JSON.stringify(a) : String(a); }
+    catch(_) { return String(a); }
+  }).join(' ');
+
+  const sendLog = (level, args) => {
+    try {
+      src.postMessage({ type: 'ORBIT_EVAL_LOG', reqId, level, text: fmt(args) }, '*');
+    } catch(_) {}
+  };
+
+  console.log   = (...a) => { origLog(...a);   sendLog('console', a); };
+  console.warn  = (...a) => { origWarn(...a);  sendLog('warn',    a); };
+  console.error = (...a) => { origError(...a); sendLog('error',   a); };
+
+  const restore = () => {
+    console.log = origLog; console.warn = origWarn; console.error = origError;
+  };
+
+  try {
+    // Inject args as named variables so callers never need string concatenation.
+    // e.g. $exec("return price * 1.2", { price: {$rawPrice} })
+    // Each key becomes a const in the inner scope — values are JSON-safe copies.
+    let argSetup = '';
+    if (args && typeof args === 'object' && !Array.isArray(args)) {
+      for (const [k, v] of Object.entries(args)) {
+        // Only allow valid JS identifiers as keys
+        if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)) {
+          argSetup += `const ${k} = ${JSON.stringify(v)};\n`;
+        }
+      }
+    }
+
+    // Wrap in async IIFE so users can use await
+    const wrapped = isExpr
+      ? `(async()=>{ ${argSetup}return (${code}); })()`
+      : `(async()=>{ ${argSetup}${code} })()`;
+
+    // eval() is permitted in sandboxed extension pages — this is the point
+    const result = await eval(wrapped); // eslint-disable-line no-eval
+    restore();
+
+    let serialized = null;
+    try {
+      serialized = (result !== undefined && result !== null)
+        ? JSON.parse(JSON.stringify(result))
+        : result ?? null;
+    } catch(_) { serialized = String(result); }
+
+    src.postMessage({ type: 'ORBIT_EVAL_RESULT', reqId, result: serialized }, '*');
+  } catch(err) {
+    restore();
+    src.postMessage({ type: 'ORBIT_EVAL_RESULT', reqId, error: err.message || String(err) }, '*');
+  }
+});
+</script>
+</body></html>
